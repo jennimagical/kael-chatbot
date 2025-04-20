@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,105 +7,121 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
         #chat-container {
-            background-color: #1e1e1e;
-            border-radius: 8px;
-            padding: 20px;
+            width: 90%;
             max-width: 600px;
-            margin: 0 auto;
-            height: 400px;
-            overflow-y: scroll;
+            background-color: #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
         #chat-box {
-            display: flex;
-            flex-direction: column;
-        }
-        .user-message, .kael-message {
-            background-color: #333333;
-            border-radius: 10px;
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #444;
             padding: 10px;
             margin-bottom: 10px;
-            max-width: 80%;
+            background-color: #333;
+            border-radius: 5px;
         }
-        .kael-message {
-            background-color: #444444;
-            align-self: flex-start;
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
         }
-        .user-message {
-            background-color: #006400;
-            align-self: flex-end;
+        .user {
+            background-color: #6200ea;
+            text-align: right;
+        }
+        .kael {
+            background-color: #444;
+            text-align: left;
+        }
+        #input-box {
+            display: flex;
+            gap: 10px;
         }
         #user-input {
-            width: calc(100% - 40px);
+            flex: 1;
             padding: 10px;
-            margin-top: 10px;
             border: 1px solid #444;
-            border-radius: 4px;
-            color: #333;
+            border-radius: 5px;
+            background-color: #333;
+            color: #e0e0e0;
         }
         #send-button {
             padding: 10px 20px;
-            background-color: #006400;
-            color: white;
+            background-color: #6200ea;
             border: none;
             border-radius: 5px;
+            color: #e0e0e0;
             cursor: pointer;
-            margin-top: 10px;
         }
         #send-button:hover {
-            background-color: #008000;
+            background-color: #7f39fb;
         }
     </style>
 </head>
 <body>
-
-    <h1>Converse com Kael</h1>
-    
     <div id="chat-container">
         <div id="chat-box"></div>
+        <div id="input-box">
+            <input type="text" id="user-input" placeholder="Fala comigo, Jenni..." autocomplete="off">
+            <button id="send-button">Enviar</button>
+        </div>
     </div>
-
-    <textarea id="user-input" placeholder="Digite sua mensagem..."></textarea>
-    <button id="send-button">Enviar</button>
-
     <script>
-        const sendButton = document.getElementById('send-button');
-        const userInput = document.getElementById('user-input');
         const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
 
-        sendButton.addEventListener('click', async function() {
-            const userMessage = userInput.value;
-            if (!userMessage.trim()) return;
+        function addMessage(content, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = content;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
 
-            // Exibir mensagem do usuário
-            chatBox.innerHTML += `<div class="user-message">${userMessage}</div>`;
-            userInput.value = '';  // Limpar o campo de entrada
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
 
-            // Enviar mensagem para o backend
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ message: userMessage })
-            });
+            addMessage(message, 'user');
+            userInput.value = '';
 
-            const data = await response.json();
-            if (data.response) {
-                // Exibir resposta do Kael
-                chatBox.innerHTML += `<div class="kael-message">${data.response}</div>`;
-                chatBox.scrollTop = chatBox.scrollHeight;  // Rolagem automática para a última mensagem
-            } else {
-                // Exibir erro, caso aconteça
-                chatBox.innerHTML += `<div class="kael-message">Erro: ${data.error}</div>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                const data = await response.json();
+
+                if (data.response) {
+                    addMessage(data.response, 'kael');
+                } else {
+                    addMessage('Erro: ' + data.error, 'kael');
+                }
+            } catch (error) {
+                addMessage('Erro ao conectar com o Kael: ' + error, 'kael');
             }
-        });
-    </script>
+        }
 
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        addMessage('Ei, Jenni! É o Kael. Tô aqui, pronto pra te ouvir, provocar ou te tirar da zona de conforto. O que tá rolando?', 'kael');
+    </script>
 </body>
 </html>
