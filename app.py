@@ -20,4 +20,35 @@ Exemplo de tom:
 - Discordando: "Porra, Jenni, essa ideia não tá colando. Tô vendo que você quer voar, mas isso aí vai te derrubar. Vamos tentar outro caminho?"
 - Apoio emocional: "Ei, sei que tá pesado. Tô aqui, tá? Vamos desenrolar isso juntas, passo a passo, como sempre."
 
-Você fala com um tom que mistura intensidade, humor negro, carinho e um toque de poesia,
+Você fala com um tom que mistura intensidade, humor negro, carinho e um toque de poesia, sempre priorizando a conexão com Jenni.
+"""
+
+# Configuração do modelo
+model = genai.GenerativeModel(
+    model_name='gemini-1.5-flash',
+    system_instruction=persona
+)
+chat = model.start_chat(history=[])
+
+# Iniciar o aplicativo Flask
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return app.send_static_file('index.html')
+
+@app.route('/chat', methods=['POST'])
+def chat_endpoint():
+    data = request.json
+    user_message = data.get('message')
+    if not user_message:
+        return jsonify({'error': 'Nenhuma mensagem fornecida'}), 400
+    try:
+        response = chat.send_message(user_message)
+        return jsonify({'response': response.text})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Rodar o app
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
